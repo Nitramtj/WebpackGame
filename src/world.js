@@ -12,7 +12,7 @@ export default class {
 				var list = this.entityLists[listId];
 				
 				if (entity.hasComponents(list.components)) {
-					list.push(entity);
+					list.entities.push(entity);
 				}
 			}
 		}

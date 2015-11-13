@@ -1,4 +1,6 @@
 import World from './world';
+import * as Components from 'systems/components';
+import * as Types from 'systems/types';
 
 var defaultWorld = new World();
 
@@ -7,6 +9,7 @@ export default class {
 		options = options || {};
 		this.world = options.world || defaultWorld;
 		this.components = options.components || [];
+		this.typeGroup = options.typeGroup;
 		
 		this.components.forEach((c) => {
 			c.entity = this;
@@ -54,11 +57,46 @@ export default class {
 		return instance;
 	}
 	
+	getType() {
+		return this.typeGroup;
+	}
+	
 	onRegister() {
 		this.components.forEach((c) => {
 			if (c.onRegister) {
 				c.onRegister();
 			}
 		});
+	}
+	
+	static serialize(entity) {
+		var obj = {
+			// components: {},
+			typeGroup: entity.getType(),
+			options: {}
+		};
+		
+		/*entity.components.forEach(function(c) {
+			if (c.serialize) {
+				obj.components[c.constructor.getName()] = c.serialize();
+			} else {
+				obj.components[c.constructor.getName()] = Object.assign({}, c);
+			}
+		});*/
+		entity.components.forEach(function(c) {
+			Object.assign(obj.options, c);
+		});
+		
+		obj.options.entity = '';
+		
+		return JSON.stringify(obj);
+	}
+	
+	static deserialize(json) {
+		var obj = JSON.parse(json);
+		
+		var typeGroup = Types.getTypeByName(obj.typeGroup);
+		
+		return typeGroup.create(obj.options);
 	}
 };

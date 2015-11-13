@@ -3,6 +3,7 @@ import {registerCallback} from 'systems/loop';
 //ygsnnfll7ovibe29
 
 var peer = null;
+var receiveCallbacks = [];
 
 export default {
 	side: null,
@@ -16,10 +17,13 @@ export default {
 		peer.on('connection', (conn) => {
 			this.connections.push(conn);
 		});
-		registerCallback(() => {
-			this.connections.forEach((client) => {
-				client.send('tick');
-			});
+		
+		registerCallback((tick) => {
+			if (tick % 100 === 0) {
+				this.connections.forEach((client) => {
+					client.send('tick');
+				});
+			}
 		});
 		
 	},
@@ -32,9 +36,23 @@ export default {
 		
 		connection.on('open', () => {
 			connection.on('data', function(data) {
-				console.log(data);
+				receiveCallbacks.forEach(function(callback) {
+					callback(data);
+				});
 			});
 		});
+	},
+	
+	send: function(messageType, payload) {
+		this.connections.forEach(function(connection) {
+			connection.send({
+				messageType: messageType,
+				payload: payload
+			});
+		})
+	},
+	registerReceiveCallback: function(callback) {
+		receiveCallbacks.push(callback);
 	}
 };
 

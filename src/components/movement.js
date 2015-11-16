@@ -53,7 +53,7 @@ registerCallback(function() {
 export default class {
 	constructor(options) {
 		options = options || {};
-		this.speed = 5;
+		this.speed = options.speed || 5;
 		components.push(this);
 	}
 	

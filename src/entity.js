@@ -3,6 +3,7 @@ import * as Components from 'systems/components';
 import * as Types from 'systems/types';
 
 var defaultWorld = new World();
+var uid = 0;
 
 export default class {
 	constructor(options) {
@@ -10,6 +11,7 @@ export default class {
 		this.world = options.world || defaultWorld;
 		this.components = options.components || [];
 		this.typeGroup = options.typeGroup;
+		this.networkId = uid;
 		
 		this.components.forEach((c) => {
 			c.entity = this;
@@ -73,6 +75,7 @@ export default class {
 		var obj = {
 			// components: {},
 			typeGroup: entity.getType(),
+			networkId: entity.networkId,
 			options: {}
 		};
 		
@@ -97,6 +100,9 @@ export default class {
 		
 		var typeGroup = Types.getTypeByName(obj.typeGroup);
 		
-		return typeGroup.create(obj.options);
+		var newEntity = typeGroup.create(obj.options);
+		newEntity.networkId = obj.networkId;
+		
+		return newEntity;
 	}
 };

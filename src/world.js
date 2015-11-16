@@ -49,4 +49,9 @@ export default class {
 			return this.entityLists[uid].entities;
 		}
 	}
+	
+	clear() {
+		this.entities = [];
+		this.entityLists = {};
+	}
 };

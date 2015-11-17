@@ -1,16 +1,37 @@
 import Peer from 'peerjs';
 import {registerCallback} from 'systems/loop';
-import EventEmitter from 'events';
+import Events from 'events';
 //ygsnnfll7ovibe29
 
 var peer = null;
 var receiveCallbacks = {};
 var clientCallbacks = {};
 var peerEvents = ['data', 'open', 'close', 'error'];
+var clientUid;
+var hostClient = null;
+
+class PseudoConnection extends Events.EventEmitter {
+	constructor() {
+		super();
+	}
+	
+	send(messageType, payload) {
+		this.emit('data', {
+			messageType: messageType,
+			payload: payload
+		});
+	} 
+};
 
 class Client {
 	constructor(connection) {
-		this.connection = connection;
+		if (connection !== null) {
+			this.connection = connection;
+			this.pseudoConnection = false;
+		} else {
+			this.connection = new PseudoConnection();
+			this.pseudoConnection = true;
+		}
 		this.callbacks = {};
 	}
 	
@@ -40,6 +61,10 @@ class Client {
 			});
 		}
 	}
+	
+	isPseudoClient() {
+		return this.pseudoConnection;
+	}
 }
 
 export default {
@@ -49,31 +74,42 @@ export default {
 		this.side = 'server';
 		peer = new Peer('server', {key: 'ygsnnfll7ovibe29'});
 		peer.on('open', function(id) {
-			console.log('client id ' + id);
+			console.log('server id ' + id);
 		});
 		peer.on('connection', (conn) => {
 			this.onConnect(conn);
 		});
-		
-		registerCallback((tick) => {
-			if (tick % 100 === 0) {
-				this.client.forEach((client) => {
-					client.send('tick');
-				});
-			}
-		});
-		
 	},
 	client: function() {
 		peer = new Peer({key: 'ygsnnfll7ovibe29'});
 		peer.on('open', function(id) {
-			console.log('server id ' + id);
+			console.log('client id ' + id);
 		});
 		var connection = peer.connect('server', {reliable:true});
 		
 		connection.on('open', () => {
 			this.onConnect(connection);
 		});
+	},
+	createPseudoClient: function() {
+		var client = new Client(null);
+		this.clients.push(client);
+		
+		this.emit('connect', client);
+		
+		return client;
+	},
+	createHostClient: function() {
+		var client = new Client(null);
+		hostClient = client;
+		this.clients.push(client);
+		
+		this.emit('connect', client);
+		
+		return client;
+	},
+	isHostClient: function(client) {
+		return client !== null && client === hostClient;
 	},
 	
 	//private
@@ -102,7 +138,7 @@ export default {
 		});
 		
 		//initiate connection event
-		this.emit(client, 'connection');
+		this.emit('connect', client);
 		
 		return client;
 	},
@@ -115,7 +151,7 @@ export default {
 	},
 	
 	//only for client open right now
-	emit(client, event, args) {
+	emit(event, client, args) {
 		if (clientCallbacks[event]) {
 			clientCallbacks[event].forEach((callback) => {
 				callback(client, args);

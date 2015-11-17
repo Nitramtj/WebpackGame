@@ -3,7 +3,7 @@ import Entity from '../entity';
 
 var world = Entity.getDefaultWorld();
 
-Connection.registerReceiveCallback('entitySync', function(client, serializedObjects) {
+Connection.onMessage('entitySync', function(serverClient, serializedObjects) {
 	world.clear();
 	
 	serializedObjects.forEach(function(serializedEntity) {

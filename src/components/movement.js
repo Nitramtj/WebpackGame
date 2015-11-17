@@ -33,19 +33,21 @@ window.addEventListener('keyup', function(e) {
 registerCallback(function() {
 	components.forEach(function(c) {
 		var entity = c.entity;
-		var pos = entity.getComponent(Position);
-		
-		if (up) {
-			pos.y -= c.speed;
-		}
-		if (down) {
-			pos.y += c.speed;
-		}
-		if (left) {
-			pos.x -= c.speed;
-		}
-		if (right) {
-			pos.x += c.speed;
+		if (entity.owner.iAmOwner()) {
+			var pos = entity.getComponent(Position);
+			
+			if (up) {
+				pos.y -= c.speed;
+			}
+			if (down) {
+				pos.y += c.speed;
+			}
+			if (left) {
+				pos.x -= c.speed;
+			}
+			if (right) {
+				pos.x += c.speed;
+			}
 		}
 	});
 });

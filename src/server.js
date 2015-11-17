@@ -4,8 +4,15 @@ import * as Player from 'types/player';
 import 'systems/servernetwork'
 
 Connection.server(); // todo: lazy initialize?
-window.player = Player.create();
 
 if (module.hot) {
 	console.log('it might be hot in here');
 }
+
+Connection.on('connect', function(client) {
+	client.player = Player.create({
+		owner: client
+	});
+});
+
+window.host = Connection.createHostClient();

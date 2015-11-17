@@ -71,7 +71,7 @@ export default class {
 		});
 	}
 	
-	static serialize(entity) {
+	static serialize(entity, context) {
 		var obj = {
 			// components: {},
 			typeGroup: entity.getType(),
@@ -87,7 +87,11 @@ export default class {
 			}
 		});*/
 		entity.components.forEach(function(c) {
-			Object.assign(obj.options, c);
+			if (!c.serialize) {
+				Object.assign(obj.options, c);
+			} else {
+				Object.assign(obj.options, c.serialize(context));
+			}
 		});
 		
 		obj.options.entity = '';

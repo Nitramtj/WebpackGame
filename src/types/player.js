@@ -2,6 +2,7 @@ import Entity from 'entity';
 import Position from 'components/position';
 import Square from 'components/square';
 import Movement from 'components/movement';
+import Owner from 'components/owner';
 
 export default {
 	create: function(options) {
@@ -9,7 +10,8 @@ export default {
 			components: [
 				new Position(options),
 				new Square(options),
-				new Movement(options)
+				new Movement(options),
+				new Owner(options)
 			],
 			typeGroup: this.getName()
 		});

@@ -11,7 +11,9 @@ if (module.hot) {
 
 Connection.on('connect', function(client) {
 	client.player = Player.create({
-		owner: client
+		owner: {
+			owner: client
+		}
 	});
 });
 

@@ -33,9 +33,10 @@ class Client {
 			this.pseudoConnection = true;
 		}
 		this.callbacks = {};
+		this.trackedEntities = new WeakMap();
 	}
 	
-	send(messageType, payload) {
+	sendMessage(messageType, payload) {
 		this.connection.send({
 			messageType: messageType,
 			payload: payload
@@ -64,6 +65,18 @@ class Client {
 	
 	isPseudoClient() {
 		return this.pseudoConnection;
+	}
+	
+	needsUpdateOn(entity) {
+		if (!this.trackedEntities.has(entity)) {
+			this.trackedEntities.set(entity, -1);
+		}
+		
+		return this.trackedEntities.get(entity) < entity.dirtyCount;
+	}
+	
+	setEntityUpToDate(entity) {
+		this.trackedEntities.set(entity, entity.dirtyCount);
 	}
 }
 
@@ -161,7 +174,7 @@ export default {
 	
 	send: function(messageType, payload) {
 		this.clients.forEach(function(client) {
-			client.send({
+			client.sendMessage({
 				messageType: messageType,
 				payload: payload
 			});

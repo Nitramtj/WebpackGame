@@ -4,9 +4,11 @@ import Entity from '../entity';
 var world = Entity.getDefaultWorld();
 
 Connection.onMessage('entitySync', function(serverClient, serializedObjects) {
-	world.clear();
-	
 	serializedObjects.forEach(function(serializedEntity) {
-		Entity.deserialize(serializedEntity);
+		if (Entity.getEntityById(serializedEntity.networkId)) {
+			Entity.update(serializedEntity);
+		} else {
+			Entity.deserialize(serializedEntity);
+		}
 	});
 });

@@ -8,10 +8,10 @@ export default {
 	create: function(options) {
 		let entity = new Entity({
 			components: [
-				new Position(options),
-				new Square(options),
-				new Movement(options),
-				new Owner(options)
+				new Position(options.position),
+				new Square(options.square),
+				new Movement(options.movement),
+				new Owner(options.owner)
 			],
 			typeGroup: this.getName()
 		});

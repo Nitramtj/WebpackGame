@@ -1,9 +1,10 @@
 import World from './world';
-import * as Components from 'systems/components';
-import * as Types from 'systems/types';
+import {getComponentByName} from 'systems/components';
+import {getTypeByName} from 'systems/types';
 
 var defaultWorld = new World();
 var uid = 0;
+var entities = {};
 
 export default class {
 	constructor(options) {
@@ -11,7 +12,14 @@ export default class {
 		this.world = options.world || defaultWorld;
 		this.components = options.components || [];
 		this.typeGroup = options.typeGroup;
-		this.networkId = uid;
+		this.dirtyCount = 0;
+		if (!options.networkId) {
+			this.networkId = uid++;
+		} else {
+			this.networkId = options.networkId;
+		}
+		
+		entities[this.networkId] = this;
 		
 		this.components.forEach((c) => {
 			c.entity = this;
@@ -19,6 +27,10 @@ export default class {
 		});
 		
 		this.world.register(this);
+	}
+	
+	static getEntityById(networkId) {
+		return entities[networkId];
 	}
 	
 	static getDefaultWorld() {
@@ -71,42 +83,55 @@ export default class {
 		});
 	}
 	
+	dirty() {
+		this.dirtyCount++;
+	}
+	
 	static serialize(entity, context) {
 		var obj = {
-			// components: {},
+			components: {},
 			typeGroup: entity.getType(),
-			networkId: entity.networkId,
-			options: {}
+			networkId: entity.networkId
 		};
 		
-		/*entity.components.forEach(function(c) {
-			if (c.serialize) {
-				obj.components[c.constructor.getName()] = c.serialize();
-			} else {
-				obj.components[c.constructor.getName()] = Object.assign({}, c);
-			}
-		});*/
 		entity.components.forEach(function(c) {
+			var cName = c.constructor.getName();
+			
 			if (!c.serialize) {
-				Object.assign(obj.options, c);
+				obj.components[cName] = Object.assign({}, c);
 			} else {
-				Object.assign(obj.options, c.serialize(context));
+				obj.components[cName] = c.serialize(context);
 			}
+			obj.components[cName].entity = '';
 		});
 		
-		obj.options.entity = '';
-		
-		return JSON.stringify(obj);
+		return obj; //JSON.stringify(obj);
 	}
 	
 	static deserialize(json) {
-		var obj = JSON.parse(json);
+		var obj = json; //JSON.parse(json);
 		
-		var typeGroup = Types.getTypeByName(obj.typeGroup);
-		
-		var newEntity = typeGroup.create(obj.options);
-		newEntity.networkId = obj.networkId;
+		var typeGroup = getTypeByName(obj.typeGroup);
+		var newEntity = typeGroup.create(obj.components);
 		
 		return newEntity;
+	}
+	
+	static update(obj) {
+		var entity = entities[obj.networkId];
+		
+		for (var componentName in obj.components) {
+			if (obj.components.hasOwnProperty(componentName)) {
+				var cOptions = obj.components[componentName];
+				cOptions.entity = entity;
+				var c = entity[componentName];
+				
+				if (!c.deserialize) {
+					Object.assign(c, cOptions);
+				} else {
+					c.deserialize(cOptions);
+				}
+			}
+		}
 	}
 };
